@@ -31,7 +31,7 @@ class Siren(nn.Module):
         super().__init__()
         weight = torch.zeros(dim_out, dim_in)
         bias = torch.zeros(dim_out) if use_bias else None
-        init_(weight, bias)
+        init_(weight, bias, c = c, w0 = w0)
 
         self.weight = nn.Parameter(weight)
         self.bias = nn.Parameter(bias) if use_bias else None

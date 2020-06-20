@@ -42,8 +42,19 @@ neuron = Siren(
     dim_out = 256
 )
 
-spatial_coor = torch.randn(1, 3)
-neuron(spatial_coor) # (1, 256)
+coor = torch.randn(1, 3)
+neuron(coor) # (1, 256)
+```
+
+Sine activation (just a wrapper around `torch.sin`)
+
+```python
+import torch
+from siren_pytorch import Sine
+
+act = Sine(1.)
+coor = torch.randn(1, 2)
+act(coor)
 ```
 
 ## Citations

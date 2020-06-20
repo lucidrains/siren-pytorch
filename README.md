@@ -1,5 +1,7 @@
 ## SIREN in Pytorch
 
+[![PyPI version](https://badge.fury.io/py/siren-pytorch.svg)](https://badge.fury.io/py/siren-pytorch)
+
 Pytorch implementation of SIREN -  <a href="https://arxiv.org/abs/2006.09661">Implicit Neural Representations with Periodic Activation Function</a>
 
 ## Install

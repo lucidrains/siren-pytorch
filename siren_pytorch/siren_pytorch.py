@@ -3,6 +3,11 @@ import math
 from torch import nn
 import torch.nn.functional as F
 
+# helpers
+
+def exists(val):
+    return val is not None
+
 # sin activation
 
 class Sine(nn.Module):
@@ -34,7 +39,7 @@ class Siren(nn.Module):
         w_std = (1 / dim) if self.is_first else (math.sqrt(c / dim) / w0)
         weight.uniform_(-w_std, w_std)
 
-        if bias is not None:
+        if exists(bias):
             bias.uniform_(-w_std, w_std)
 
     def forward(self, x):
@@ -45,7 +50,7 @@ class Siren(nn.Module):
 # siren network
 
 class SirenNet(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 1., w0_initial = 30., use_bias = True, final_activation = None):
+    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 30., w0_initial = 30., use_bias = True, final_activation = None):
         super().__init__()
         layers = []
         for ind in range(num_layers):
@@ -62,6 +67,8 @@ class SirenNet(nn.Module):
             ))
 
         self.net = nn.Sequential(*layers)
+
+        final_activation = nn.Identity() if not exists(final_activation) else final_activation
         self.last_layer = Siren(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, use_bias = use_bias, activation = final_activation)
 
     def forward(self, x):

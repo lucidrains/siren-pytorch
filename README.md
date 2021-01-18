@@ -58,6 +58,30 @@ coor = torch.randn(1, 2)
 act(coor)
 ```
 
+Wrapper to return an image of specified height and width from a given `SirenNet`, for training and inference
+
+```python
+import torch
+from torch import nn
+from siren_pytorch import SirenNet, SirenWrapper
+
+net = SirenNet(
+    dim_in = 2,                        # input dimension, ex. 2d coor
+    dim_hidden = 256,                  # hidden dimension
+    dim_out = 3,                       # output dimension, ex. rgb value
+    num_layers = 5,                    # number of layers
+    w0_initial = 30.                   # different signals may require different omega_0 in the first layer - this is a hyperparameter
+)
+
+wrapper = SirenWrapper(
+    net,
+    image_width = 256,
+    image_height = 256
+)
+
+image = wrapper() # (1, 3, 256, 256)
+```
+
 ## Citations
 
 ```bibtex

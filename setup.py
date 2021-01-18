@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'siren-pytorch',
   packages = find_packages(),
-  version = '0.0.6',
+  version = '0.0.7',
   license='MIT',
   description = 'Implicit Neural Representations with Periodic Activation Functions',
   author = 'Phil Wang',
@@ -11,6 +11,7 @@ setup(
   url = 'https://github.com/lucidrains/siren-pytorch',
   keywords = ['artificial intelligence', 'deep learning'],
   install_requires=[
+      'einops',
       'torch'
   ],
   classifiers=[

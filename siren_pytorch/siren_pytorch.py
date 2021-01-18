@@ -1,7 +1,8 @@
-import torch
 import math
+import torch
 from torch import nn
 import torch.nn.functional as F
+from einops import rearrange
 
 # helpers
 
@@ -74,3 +75,25 @@ class SirenNet(nn.Module):
     def forward(self, x):
         x = self.net(x)
         return self.last_layer(x)
+
+# wrapper
+
+class SirenWrapper(nn.Module):
+    def __init__(self, net, image_width, image_height):
+        super().__init__()
+        assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
+
+        self.net = net
+        self.image_width = image_width
+        self.image_height = image_height
+
+        tensors = [torch.linspace(-1, 1, steps = image_width), torch.linspace(-1, 1, steps = image_height)]
+        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+        mgrid = rearrange(mgrid, 'h w c -> (h w) c')
+        self.register_buffer('grid', mgrid)
+
+    def forward(self):
+        coords = self.grid.clone().detach().requires_grad_()
+        out = self.net(coords)
+        out = rearrange(out, '(h w) c -> () c h w', h = self.image_height, w = self.image_width)
+        return out

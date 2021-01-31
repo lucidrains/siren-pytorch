@@ -58,7 +58,8 @@ coor = torch.randn(1, 2)
 act(coor)
 ```
 
-Wrapper to return an image of specified height and width from a given `SirenNet`, for training and inference
+Wrapper to train on a specific image of specified height and width from a given `SirenNet`, and then to subsequently generate.
+
 
 ```python
 import torch
@@ -79,9 +80,17 @@ wrapper = SirenWrapper(
     image_height = 256
 )
 
-image = wrapper() # (1, 3, 256, 256)
+img = torch.randn(1, 3, 256, 256)
+loss = wrapper(img)
+loss.backward()
+
+# after much training ...
+# simply invoke the wrapper without passing in anything
+
+pred_img = wrapper() # (1, 3, 256, 256)
 ```
 
+If you want
 ## Citations
 
 ```bibtex

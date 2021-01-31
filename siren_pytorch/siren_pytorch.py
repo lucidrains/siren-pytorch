@@ -92,8 +92,11 @@ class SirenWrapper(nn.Module):
         mgrid = rearrange(mgrid, 'h w c -> (h w) c')
         self.register_buffer('grid', mgrid)
 
-    def forward(self):
+    def forward(self, img = None):
         coords = self.grid.clone().detach().requires_grad_()
         out = self.net(coords)
         out = rearrange(out, '(h w) c -> () c h w', h = self.image_height, w = self.image_width)
+
+        if exists(img):
+            return F.mse_loss(img, out)
         return out

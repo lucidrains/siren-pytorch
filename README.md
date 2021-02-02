@@ -90,7 +90,6 @@ loss.backward()
 pred_img = wrapper() # (1, 3, 256, 256)
 ```
 
-If you want
 ## Citations
 
 ```bibtex

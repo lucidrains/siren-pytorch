@@ -21,7 +21,7 @@ class Sine(nn.Module):
 # siren layer
 
 class Siren(nn.Module):
-    def __init__(self, dim_in, dim_out, w0 = 30., c = 6., is_first = False, use_bias = True, activation = None):
+    def __init__(self, dim_in, dim_out, w0 = 1., c = 6., is_first = False, use_bias = True, activation = None):
         super().__init__()
         self.dim_in = dim_in
         self.is_first = is_first
@@ -51,7 +51,7 @@ class Siren(nn.Module):
 # siren network
 
 class SirenNet(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 30., w0_initial = 30., use_bias = True, final_activation = None):
+    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 1., w0_initial = 30., use_bias = True, final_activation = None):
         super().__init__()
         layers = []
         for ind in range(num_layers):

@@ -83,7 +83,7 @@ class SirenNet(nn.Module):
             x = layer(x)
 
             if exists(mod):
-                x *= rearrange(mod, 'd -> () d').sigmoid()
+                x *= rearrange(mod, 'd -> () d')
 
         return self.last_layer(x)
 

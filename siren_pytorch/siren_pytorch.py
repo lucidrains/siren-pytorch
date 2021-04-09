@@ -90,13 +90,16 @@ class SirenNet(nn.Module):
 # modulatory feed forward
 
 class Modulator(nn.Module):
-    def __init__(self, dim, num_layers):
+    def __init__(self, dim_in, dim_hidden, num_layers):
         super().__init__()
         self.layers = nn.ModuleList([])
 
         for ind in range(num_layers):
+            is_first = ind == 0
+            dim = dim_in if is_first else (dim_hidden + dim_in)
+
             self.layers.append(nn.Sequential(
-                nn.Linear(dim, dim),
+                nn.Linear(dim, dim_hidden),
                 nn.ReLU()
             ))
 
@@ -105,15 +108,16 @@ class Modulator(nn.Module):
         hiddens = []
 
         for layer in self.layers:
-            x = layer(x + z)
+            x = layer(x)
             hiddens.append(x)
+            x = torch.cat((x, z))
 
         return tuple(hiddens)
 
 # wrapper
 
 class SirenWrapper(nn.Module):
-    def __init__(self, net, image_width, image_height, use_latent = False):
+    def __init__(self, net, image_width, image_height, latent_dim = None):
         super().__init__()
         assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
 
@@ -122,9 +126,10 @@ class SirenWrapper(nn.Module):
         self.image_height = image_height
 
         self.modulator = None
-        if use_latent:
+        if exists(latent_dim):
             self.modulator = Modulator(
-                dim = net.dim_hidden,
+                dim_in = latent_dim,
+                dim_hidden = net.dim_hidden,
                 num_layers = net.num_layers
             )
 

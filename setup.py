@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'siren-pytorch',
   packages = find_packages(),
-  version = '0.1.2',
+  version = '0.1.4',
   license='MIT',
   description = 'Implicit Neural Representations with Periodic Activation Functions',
   author = 'Phil Wang',

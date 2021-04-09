@@ -94,7 +94,7 @@ pred_img = wrapper() # (1, 3, 256, 256)
 
 A <a href="https://arxiv.org/abs/2104.03960">new paper</a> proposes that the best way to condition a Siren with a latent code is to pass the latent vector through a modulator feedforward network, where each layer's hidden state is elementwise multiplied with the corresponding layer of the Siren.
 
-You can use this simply by setting an extra keyword `use_latent`, on the `SirenWrapper`
+You can use this simply by setting an extra keyword `latent_dim`, on the `SirenWrapper`
 
 ```python
 import torch
@@ -111,12 +111,12 @@ net = SirenNet(
 
 wrapper = SirenWrapper(
     net,
-    use_latent = True,
+    latent_dim = 512,
     image_width = 256,
     image_height = 256
 )
 
-latent = nn.Parameter(torch.zeros(256).normal_(0, 1e-2))
+latent = nn.Parameter(torch.zeros(512).normal_(0, 1e-2))
 img = torch.randn(1, 3, 256, 256)
 
 loss = wrapper(img, latent = latent)

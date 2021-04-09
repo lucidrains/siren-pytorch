@@ -100,7 +100,8 @@ class Modulator(nn.Module):
             dim = dim_in if is_first else dim_hidden
 
             self.layers.append(nn.Sequential(
-                nn.Linear(dim, dim_hidden)
+                nn.Linear(dim, dim_hidden),
+                nn.ReLU()
             ))
 
     def forward(self, x):

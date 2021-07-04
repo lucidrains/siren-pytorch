@@ -99,15 +99,15 @@ You can use this simply by setting an extra keyword `latent_dim`, on the `SirenW
 ```python
 import torch
 from torch import nn
-from siren_pytorch import SirenNet, SirenWrapper
+from siren_pytorch import SirenNet
 
 net = SirenNet(
-    dim_in=1,
+    dim_in=2,
     dim_hidden=256,
-    dim_out=1,
-    num_layers=3,
+    dim_out=3,
+    num_layers=5,
     w0 = 1.,
-    w0_initial = 6000.,
+    w0_initial = 30.,
     use_bias = True,
     final_activation = None)
 
@@ -129,7 +129,7 @@ optim.step()
 # after much training ...
 # simply invoke the wrapper without passing in anything
 
-pred_img = siren_decoder(latent = latent) # (1, 3, 256, 256)
+pred_img = siren_decoder(latent = latent) # (256, 256, 3)
 ```
 
 ## Citations

@@ -117,13 +117,14 @@ class Modulator(nn.Module):
 # wrapper
 
 class SirenWrapper(nn.Module):
-    def __init__(self, net, image_width, image_height, latent_dim = None):
+    def __init__(self, net, output_shape, latent_dim = None):
         super().__init__()
         assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
 
         self.net = net
-        self.image_width = image_width
-        self.image_height = image_height
+        output_shape = list(output_shape)
+        self.output_shape = output_shape[:-1]
+        self.output_channels = output_shape[-1]
 
         self.modulator = None
         if exists(latent_dim):
@@ -133,22 +134,27 @@ class SirenWrapper(nn.Module):
                 num_layers = net.num_layers
             )
 
-        tensors = [torch.linspace(-1, 1, steps = image_width), torch.linspace(-1, 1, steps = image_height)]
+        tensors = [torch.linspace(-1, 1, steps = i) for i in self.output_shape]
         mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
-        mgrid = rearrange(mgrid, 'h w c -> (h w) c')
+        # mgrid = rearrange(mgrid, 'h w c -> (h w) c')
+        dims = mgrid.shape
+        mgrid = mgrid.reshape(-1, len(self.output_shape))
         self.register_buffer('grid', mgrid)
 
-    def forward(self, img = None, *, latent = None):
+    def forward(self, target = None, *, latent = None):
         modulate = exists(self.modulator)
         assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
 
         mods = self.modulator(latent) if modulate else None
 
+        # print(mods)
+
         coords = self.grid.clone().detach().requires_grad_()
         out = self.net(coords, mods)
-        out = rearrange(out, '(h w) c -> () c h w', h = self.image_height, w = self.image_width)
+        
+        out = out.reshape(self.output_shape + [self.output_channels])
 
-        if exists(img):
-            return F.mse_loss(img, out)
+        if exists(target):
+            return F.mse_loss(target, out)
 
         return out

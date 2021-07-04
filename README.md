@@ -102,30 +102,34 @@ from torch import nn
 from siren_pytorch import SirenNet, SirenWrapper
 
 net = SirenNet(
-    dim_in = 2,                        # input dimension, ex. 2d coor
-    dim_hidden = 256,                  # hidden dimension
-    dim_out = 3,                       # output dimension, ex. rgb value
-    num_layers = 5,                    # number of layers
-    w0_initial = 30.                   # different signals may require different omega_0 in the first layer - this is a hyperparameter
-)
+    dim_in=1,
+    dim_hidden=256,
+    dim_out=1,
+    num_layers=3,
+    w0 = 1.,
+    w0_initial = 6000.,
+    use_bias = True,
+    final_activation = None)
 
-wrapper = SirenWrapper(
+siren_decoder = SirenWrapper(
     net,
     latent_dim = 512,
-    image_width = 256,
-    image_height = 256
+    output_shape=[256, 256, 3]
 )
+optim = torch.optim.Adam(lr=1e-4, params=siren_decoder.parameters())
 
-latent = nn.Parameter(torch.zeros(512).normal_(0, 1e-2))
-img = torch.randn(1, 3, 256, 256)
+latent = nn.Parameter(torch.zeros(512).normal_(0, 1))
+img = torch.randn(256, 256, 3)
 
-loss = wrapper(img, latent = latent)
+loss = siren_decoder(img, latent = latent)
+optim.zero_grad()
 loss.backward()
+optim.step()
 
 # after much training ...
 # simply invoke the wrapper without passing in anything
 
-pred_img = wrapper(latent = latent) # (1, 3, 256, 256)
+pred_img = siren_decoder(latent = latent) # (1, 3, 256, 256)
 ```
 
 ## Citations

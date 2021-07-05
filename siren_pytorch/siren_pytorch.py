@@ -117,6 +117,51 @@ class Modulator(nn.Module):
 # wrapper
 
 class SirenWrapper(nn.Module):
+    def __init__(self, net, image_width, image_height, latent_dim = None):
+        super().__init__()
+        assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
+
+        self.net = net
+        self.image_width = image_width
+        self.image_height = image_height
+
+        self.modulator = None
+        if exists(latent_dim):
+            self.modulator = Modulator(
+                dim_in = latent_dim,
+                dim_hidden = net.dim_hidden,
+                num_layers = net.num_layers
+            )
+
+        tensors = [torch.linspace(-1, 1, steps = image_width), torch.linspace(-1, 1, steps = image_height)]
+        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+        mgrid = rearrange(mgrid, 'h w c -> (h w) c')
+        self.register_buffer('grid', mgrid)
+
+    def forward(self, img = None, *, latent = None):
+        modulate = exists(self.modulator)
+        assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
+
+        mods = self.modulator(latent) if modulate else None
+
+        coords = self.grid.clone().detach().requires_grad_()
+        out = self.net(coords, mods)
+        out = rearrange(out, '(h w) c -> () c h w', h = self.image_height, w = self.image_width)
+
+        if exists(img):
+            return F.mse_loss(img, out)
+
+        return out
+
+
+def get_grid(output_shape, min_val=-1, max_val=1):
+    tensors = [torch.linspace(min_val, max_val, steps = i) for i in output_shape]
+    mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+    mgrid = mgrid.reshape(-1, len(output_shape))
+    return mgrid
+
+
+class SirenWrapperNDim(nn.Module):
     def __init__(self, net, output_shape, latent_dim = None):
         super().__init__()
         assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
@@ -133,26 +178,24 @@ class SirenWrapper(nn.Module):
                 dim_hidden = net.dim_hidden,
                 num_layers = net.num_layers
             )
-
-        tensors = [torch.linspace(-1, 1, steps = i) for i in self.output_shape]
-        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
-        # mgrid = rearrange(mgrid, 'h w c -> (h w) c')
-        dims = mgrid.shape
-        mgrid = mgrid.reshape(-1, len(self.output_shape))
+        mgrid = get_grid(self.output_shape)
         self.register_buffer('grid', mgrid)
 
-    def forward(self, target = None, *, latent = None):
+    def forward(self, target = None, *, latent = None, coords = None, output_shape = None):
         modulate = exists(self.modulator)
         assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
 
         mods = self.modulator(latent) if modulate else None
 
         # print(mods)
-
-        coords = self.grid.clone().detach().requires_grad_()
+        if coords is None:
+          coords = self.grid.clone().detach().requires_grad_()
         out = self.net(coords, mods)
+
+        if output_shape is None:
+          output_shape = self.output_shape
         
-        out = out.reshape(self.output_shape + [self.output_channels])
+        out = out.reshape(output_shape + [self.output_channels])
 
         if exists(target):
             return F.mse_loss(target, out)

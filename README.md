@@ -111,7 +111,7 @@ net = SirenNet(
     use_bias = True,
     final_activation = None)
 
-siren_decoder = SirenWrapper(
+siren_decoder = SirenWrapperNDim(
     net,
     latent_dim = 512,
     output_shape=[256, 256, 3]

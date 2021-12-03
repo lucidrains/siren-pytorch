@@ -133,8 +133,8 @@ class SirenWrapper(nn.Module):
                 num_layers = net.num_layers
             )
 
-        tensors = [torch.linspace(-1, 1, steps = image_width), torch.linspace(-1, 1, steps = image_height)]
-        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+        tensors = [torch.linspace(-1, 1, steps = image_height), torch.linspace(-1, 1, steps = image_width)]
+        mgrid = torch.stack(torch.meshgrid(*tensors, indexing = 'ij'), dim=-1)
         mgrid = rearrange(mgrid, 'h w c -> (h w) c')
         self.register_buffer('grid', mgrid)
 

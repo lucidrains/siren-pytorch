@@ -24,7 +24,17 @@ class Sine(nn.Module):
 # siren layer
 
 class Siren(nn.Module):
-    def __init__(self, dim_in, dim_out, w0 = 1., c = 6., is_first = False, use_bias = True, activation = None):
+    def __init__(
+        self,
+        dim_in,
+        dim_out,
+        w0 = 1.,
+        c = 6.,
+        is_first = False,
+        use_bias = True,
+        activation = None,
+        dropout = 0.
+    ):
         super().__init__()
         self.dim_in = dim_in
         self.is_first = is_first
@@ -36,6 +46,7 @@ class Siren(nn.Module):
         self.weight = nn.Parameter(weight)
         self.bias = nn.Parameter(bias) if use_bias else None
         self.activation = Sine(w0) if activation is None else activation
+        self.dropout = nn.Dropout(dropout)
 
     def init_(self, weight, bias, c, w0):
         dim = self.dim_in
@@ -49,12 +60,24 @@ class Siren(nn.Module):
     def forward(self, x):
         out =  F.linear(x, self.weight, self.bias)
         out = self.activation(out)
+        out = self.dropout(out)
         return out
 
 # siren network
 
 class SirenNet(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out, num_layers, w0 = 1., w0_initial = 30., use_bias = True, final_activation = None):
+    def __init__(
+        self,
+        dim_in,
+        dim_hidden,
+        dim_out,
+        num_layers,
+        w0 = 1.,
+        w0_initial = 30.,
+        use_bias = True,
+        final_activation = None,
+        dropout = 0.
+    ):
         super().__init__()
         self.num_layers = num_layers
         self.dim_hidden = dim_hidden
@@ -65,13 +88,16 @@ class SirenNet(nn.Module):
             layer_w0 = w0_initial if is_first else w0
             layer_dim_in = dim_in if is_first else dim_hidden
 
-            self.layers.append(Siren(
+            layer = Siren(
                 dim_in = layer_dim_in,
                 dim_out = dim_hidden,
                 w0 = layer_w0,
                 use_bias = use_bias,
-                is_first = is_first
-            ))
+                is_first = is_first,
+                dropout = dropout
+            )
+
+            self.layers.append(layer)
 
         final_activation = nn.Identity() if not exists(final_activation) else final_activation
         self.last_layer = Siren(dim_in = dim_hidden, dim_out = dim_out, w0 = w0, use_bias = use_bias, activation = final_activation)

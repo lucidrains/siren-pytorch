@@ -178,3 +178,52 @@ class SirenWrapper(nn.Module):
             return F.mse_loss(img, out)
 
         return out
+
+
+def get_grid(output_shape, min_val=-1, max_val=1):
+    tensors = [torch.linspace(min_val, max_val, steps = i) for i in output_shape]
+    mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+    mgrid = mgrid.reshape(-1, len(output_shape))
+    return mgrid
+
+
+class SirenWrapperNDim(nn.Module):
+    def __init__(self, net, output_shape, latent_dim = None):
+        super().__init__()
+        assert isinstance(net, SirenNet), 'SirenWrapper must receive a Siren network'
+
+        self.net = net
+        output_shape = list(output_shape)
+        self.output_shape = output_shape[:-1]
+        self.output_channels = output_shape[-1]
+
+        self.modulator = None
+        if exists(latent_dim):
+            self.modulator = Modulator(
+                dim_in = latent_dim,
+                dim_hidden = net.dim_hidden,
+                num_layers = net.num_layers
+            )
+        mgrid = get_grid(self.output_shape)
+        self.register_buffer('grid', mgrid)
+
+    def forward(self, target = None, *, latent = None, coords = None, output_shape = None):
+        modulate = exists(self.modulator)
+        assert not (modulate ^ exists(latent)), 'latent vector must be only supplied if `latent_dim` was passed in on instantiation'
+
+        mods = self.modulator(latent) if modulate else None
+
+        # print(mods)
+        if coords is None:
+          coords = self.grid.clone().detach().requires_grad_()
+        out = self.net(coords, mods)
+
+        if output_shape is None:
+          output_shape = self.output_shape
+        
+        out = out.reshape(output_shape + [self.output_channels])
+
+        if exists(target):
+            return F.mse_loss(target, out)
+
+        return out
